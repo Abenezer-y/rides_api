@@ -56,30 +56,29 @@ app.add_middleware(
     allow_headers=["*"], 
     expose_headers = ['*']
 )
-df_db = get_data_df(collection='rides', credential=wwl_db)
 
-@app.get("/")
+
+@app.get("/", tags=["root"])
 def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/rides")
-
+@app.get("/rides", tags=["root"])
 def read_rides():
+    df_db = get_data_df(collection='rides', credential=wwl_db)
     row_count = df_db.shape[0]
     ride_read_list = []
     name_lt = df_db['name'].values.tolist()
     key_lt = df_db['_id'].values.tolist()
     Status_lt = df_db['status'].values.tolist()
-
     for i in range(row_count):
         record = Rides_read(status=[Status_lt[i], key_lt[i]], key=str(key_lt[i]), name=name_lt[i])
         ride_read_list.append(asdict(record))
-    
     return ride_read_list
 
 @app.post("/editStatus", tags=["root"])
 def edit_status(status: dict):
+    df_db = get_data_df(collection='rides', credential=wwl_db)
     print(status)
     data = df_db[df_db['_id']==status['_id']]
     if status['status'] == True:
