@@ -46,7 +46,7 @@ def get_data_df(collection, credential):
 
 app = FastAPI()
 
-origins = ["*"]
+origins = ["https://dash-display.vercel.app/", "http://localhost:3000/"]
 
 app.add_middleware(
     CORSMiddleware,
