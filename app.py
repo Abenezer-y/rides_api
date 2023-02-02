@@ -7,6 +7,7 @@ from dataclasses import dataclass, asdict, replace, astuple
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import calendar
 
 
 wwl_db = {'cluster': "WWL", 
@@ -67,6 +68,7 @@ def read_root():
 @app.get("/rides", tags=["root"])
 def read_rides():
     df_db = get_data_df(collection='rides', credential=wwl_db).sort_values('name')
+    t_log = get_data_df(collection='timeLog', credential=wwl_db)['updated_on'].values[0]
     row_count = df_db.shape[0]
     ride_read_list = []
     name_lt = df_db['name'].values.tolist()
@@ -75,10 +77,13 @@ def read_rides():
     for i in range(row_count):
         record = Rides_read(status=[Status_lt[i], key_lt[i]], key=str(key_lt[i]), name=name_lt[i])
         ride_read_list.append(asdict(record))
-    return ride_read_list
+    return ride_read_list, t_log
 
 @app.post("/editStatus")
 def edit_status(status: dict):
+    dt = datetime.now()
+    t_log = get_data_df(collection='timeLog', credential=wwl_db)['updated_on'].values[0]
+    updated_on =  f"Updated on - {dt.day}-{calendar.month_abbr[dt.month]}-{dt.year} {dt.hour}:{dt.minute}"
     df_db = get_data_df(collection='rides', credential=wwl_db).sort_values('name')
     data = df_db[df_db['_id']==status['_id']]
     if status['status'] == True:
@@ -88,6 +93,7 @@ def edit_status(status: dict):
     cond = {'name': data['name'].values.tolist()[0], 'manufacturer': data['manufacturer'].values.tolist()[0]}
     doc = {'name': data['name'].values.tolist()[0], 'status': s, 'manufacturer': data['manufacturer'].values.tolist()[0]}
     update_data('rides', cond, doc, wwl_db)
+    update_data('timeLog', {'updated_on': t_log}, {'updated_on': updated_on}, wwl_db)
     return 'Updated'
 
 # @app.get("/items/{item_id}")
