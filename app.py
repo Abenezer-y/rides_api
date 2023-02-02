@@ -44,9 +44,10 @@ def get_data_df(collection, credential):
     return df
 
 
+
 app = FastAPI()
 
-origins = ["https://dash-display.vercel.app", "http://localhost:3000"]
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -65,7 +66,7 @@ def read_root():
 
 @app.get("/rides", tags=["root"])
 def read_rides():
-    df_db = get_data_df(collection='rides', credential=wwl_db)
+    df_db = get_data_df(collection='rides', credential=wwl_db).sort_values('name')
     row_count = df_db.shape[0]
     ride_read_list = []
     name_lt = df_db['name'].values.tolist()
@@ -76,16 +77,15 @@ def read_rides():
         ride_read_list.append(asdict(record))
     return ride_read_list
 
-@app.post("/editStatus", tags=["root"])
+@app.post("/editStatus")
 def edit_status(status: dict):
-    df_db = get_data_df(collection='rides', credential=wwl_db)
-    print(status)
+    df_db = get_data_df(collection='rides', credential=wwl_db).sort_values('name')
     data = df_db[df_db['_id']==status['_id']]
     if status['status'] == True:
         s = 'Open'
     else:
         s = 'Closed'
-    cond = {'_id':status['_id']}
+    cond = {'name': data['name'].values.tolist()[0], 'manufacturer': data['manufacturer'].values.tolist()[0]}
     doc = {'name': data['name'].values.tolist()[0], 'status': s, 'manufacturer': data['manufacturer'].values.tolist()[0]}
     update_data('rides', cond, doc, wwl_db)
     return 'Updated'
