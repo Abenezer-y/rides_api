@@ -83,7 +83,7 @@ def read_rides():
 def edit_status(status: dict):
     dt = datetime.now()
     t_log = get_data_df(collection='timeLog', credential=wwl_db)['updated_on'].values[0]
-    updated_on =  f"Updated on - {dt.day}-{calendar.month_abbr[dt.month]}-{dt.year} {dt.hour}:{dt.minute}"
+    updated_on =  f"Updated on - {dt.day}-{calendar.month_abbr[dt.month]}-{dt.year} {dt.hour}:{('0'+str(dt.minute) if dt.minute < 10 else dt.minute)}"
     df_db = get_data_df(collection='rides', credential=wwl_db).sort_values('name')
     data = df_db[df_db['_id']==status['_id']]
     if status['status'] == True:
